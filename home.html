@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日本史暗記タイピング！</title>
+    <link rel="icon" href="日本史タイピング.jpeg">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #1e1b18 0%, #2d2420 50%, #151019 100%);
+            color: #f3f4f6;
+            min-height: 100vh;
+        }
+        .font-kiwi {
+            font-family: 'Kiwi Maru', serif;
+        }
+        /* Custom Keyboard Styling */
+        .key {
+            transition: all 0.1s ease;
+            box-shadow: 0 4px 0 #374151;
+        }
+        .key.active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #374151;
+            background-color: #f59e0b !important;
+            color: #111827 !important;
+            font-weight: bold;
+        }
+        .key.next-key {
+            background-color: #3b82f6 !important;
+            color: white !important;
+            animation: pulse 1.2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: rgba(31, 44, 63, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        /* Japanese Traditional Pattern Background Overlay */
+        .bg-pattern {
+            background-image: radial-gradient(rgba(245, 158, 11, 0.15) 1px, transparent 0);
+            background-size: 24px 24px;
+        }
+        /* Typed text styling */
+        .char-typed {
+            color: #10b981; /* Emerald-500 */
+        }
+        .char-current {
+            background-color: #f59e0b;
+            color: #293141;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+        .char-untyped {
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body class="bg-pattern min-h-screen flex flex-col justify-between p-2 md:p-4 selection:bg-amber-500 selection:text-gray-900">
+
+    <!-- Header / Logo Area -->
+    <header class="max-w-5xl mx-auto w-full flex flex-col md:flex-row items-center justify-between py-2 border-b border-amber-900/40 mb-4">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="showScreen('startScreen')">
+            <img src="日本史タイピング.jpeg" alt="日本史暗記タイピング！" class="w-14 h-14 md:w-16 md:h-16 rounded-xl shadow-lg object-cover" onerror="this.onerror=null; this.src='https://placehold.co/100x100/b91c1c/ffffff?text=日本史';">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-black font-kiwi tracking-wider text-gray-900 drop-shadow-sm">
+                    日本史暗記タイピング！
+                </h1>
+                <p class="text-xs text-gray-700 font-bold">小学生〜中学生向け 歴史年号＆重要用語攻略</p>
+            </div>
+        </div>
+        <div id="statsHeader" class="hidden flex items-center gap-6 mt-3 md:mt-0 bg-stone-900/90 px-6 py-2.5 rounded-full border-2 border-amber-500 shadow-xl">
+            <div class="text-center">
+                <span class="text-xs text-amber-200 font-bold block">残り時間</span>
+                <span id="timer" class="text-xl font-black font-mono text-amber-400">60s</span>
+            </div>
+            <div class="h-8 w-0.5 bg-amber-600/60"></div>
+            <div class="text-center">
+                <span class="text-xs text-amber-200 font-bold block">スコア</span>
+                <span id="score" class="text-xl font-black font-mono text-emerald-400">0</span>
+            </div>
+            <div class="h-8 w-0.5 bg-amber-600/60"></div>
+            <div class="text-center">
+                <span class="text-xs text-amber-200 font-bold block">正確率</span>
+                <span id="accuracy" class="text-xl font-black font-mono text-sky-400">0%</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-5xl mx-auto w-full flex-grow flex flex-col justify-center my-2">
+
+        <!-- 1. START / MODE SELECT SCREEN -->
+        <div id="startScreen" class="space-y-6">
+            <div class="max-w-md mx-auto text-center p-4 bg-white/90 border-2 border-gray-900 rounded-xl shadow-md space-y-1">
+                <h2 class="text-xl md:text-2xl font-black text-gray-900 font-kiwi tracking-wide">挑戦する時代を選ぼう！</h2>
+                <p class="text-xs md:text-sm font-bold text-gray-700">歴史の用語や出来事をタイピングしながら楽しく暗記しよう！</p>
+                <p class="text-xs md:text-sm font-bold text-gray-700">やり直したいときは右上のロゴを押そう！</p>
+                <p class="text-xs md:text-sm font-bold text-gray-700">トップ画面に戻れるよ！</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                <!-- Mode 1 -->
+                <button onclick="selectMode(0)" class="group glass-card p-5 rounded-2xl border-l-4 border-amber-500 hover:border-amber-400 hover:bg-amber-900/30 transition-all text-left flex flex-col justify-between shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">第1章</span>
+                            <i class="fa-solid fa-gem text-amber-400 group-hover:scale-125 transition-transform"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white group-hover:text-amber-300">縄文〜古墳時代</h3>
+                        <p class="text-xs text-gray-400 mt-1">卑弥呼、大仙陵古墳、土偶など大昔の日本の成り立ち</p>
+                    </div>
+                    <div class="mt-4 text-xs font-bold text-amber-400 group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                        スタート <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </button>
+
+                <!-- Mode 2 -->
+                <button onclick="selectMode(1)" class="group glass-card p-5 rounded-2xl border-l-4 border-emerald-500 hover:border-emerald-400 hover:bg-emerald-900/30 transition-all text-left flex flex-col justify-between shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">第2章</span>
+                            <i class="fa-solid fa-torii-gate text-emerald-400 group-hover:scale-125 transition-transform"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white group-hover:text-emerald-300">飛鳥〜鎌倉時代</h3>
+                        <p class="text-xs text-gray-400 mt-1">聖徳太子、大化の改新(645)、源頼朝(1192/1185)など</p>
+                    </div>
+                    <div class="mt-4 text-xs font-bold text-emerald-400 group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                        スタート <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </button>
+
+                <!-- Mode 3 -->
+                <button onclick="selectMode(2)" class="group glass-card p-5 rounded-2xl border-l-4 border-rose-500 hover:border-rose-400 hover:bg-rose-900/30 transition-all text-left flex flex-col justify-between shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">第3章</span>
+                            <i class="fa-solid fa-chess-rook text-rose-400 group-hover:scale-125 transition-transform"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white group-hover:text-rose-300">室町〜安土桃山時代</h3>
+                        <p class="text-xs text-gray-400 mt-1">金閣、本能寺の変(1582)、織田信長、豊臣秀吉</p>
+                    </div>
+                    <div class="mt-4 text-xs font-bold text-rose-400 group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                        スタート <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </button>
+
+                <!-- Mode 4 -->
+                <button onclick="selectMode(3)" class="group glass-card p-5 rounded-2xl border-l-4 border-indigo-500 hover:border-indigo-400 hover:bg-indigo-900/30 transition-all text-left flex flex-col justify-between shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">第4章</span>
+                            <i class="fa-solid fa-scroll text-indigo-400 group-hover:scale-125 transition-transform"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white group-hover:text-indigo-300">江戸時代</h3>
+                        <p class="text-xs text-gray-400 mt-1">徳川家康、関ヶ原の戦い(1600)、参勤交代、鎖国</p>
+                    </div>
+                    <div class="mt-4 text-xs font-bold text-indigo-400 group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                        スタート <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </button>
+
+                <!-- Mode 5 -->
+                <button onclick="selectMode(4)" class="group glass-card p-5 rounded-2xl border-l-4 border-cyan-500 hover:border-cyan-400 hover:bg-cyan-900/30 transition-all text-left flex flex-col justify-between shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">第5章</span>
+                            <i class="fa-solid fa-train text-cyan-400 group-hover:scale-125 transition-transform"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white group-hover:text-cyan-300">明治〜戦前</h3>
+                        <p class="text-xs text-gray-400 mt-1">明治維新(1868)、文明開化、日露戦争、大正デモクラシー</p>
+                    </div>
+                    <div class="mt-4 text-xs font-bold text-cyan-400 group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                        スタート <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </button>
+
+                <!-- Mode 6 -->
+                <button onclick="selectMode(5)" class="group glass-card p-5 rounded-2xl border-l-4 border-fuchsia-500 hover:border-fuchsia-400 hover:bg-fuchsia-900/30 transition-all text-left flex flex-col justify-between shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30">第6章</span>
+                            <i class="fa-solid fa-city text-fuchsia-400 group-hover:scale-125 transition-transform"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white group-hover:text-fuchsia-300">戦後〜現代</h3>
+                        <p class="text-xs text-gray-400 mt-1">日本国憲法(1946)、高度経済成長、東京オリンピック</p>
+                    </div>
+                    <div class="mt-4 text-xs font-bold text-fuchsia-400 group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                        スタート <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. GAME SCREEN -->
+        <div id="gameScreen" class="hidden flex flex-col items-center space-y-4">
+            <!-- Question Box -->
+            <div class="glass-card w-full max-w-3xl rounded-2xl p-6 shadow-2xl relative overflow-hidden border border-amber-500/30">
+                <!-- Era Badge -->
+                <div class="flex justify-between items-center mb-3">
+                    <span id="currentEraBadge" class="bg-amber-500/20 text-amber-300 text-xs px-3 py-1 rounded-full font-bold border border-amber-500/40">
+                        時代名
+                    </span>
+                    <span id="questionCount" class="text-xs text-gray-400 font-mono">第 1 問</span>
+                </div>
+
+                <!-- History Context / Explanation (Knowledge Booster) -->
+                <div id="wordDesc" class="text-amber-200/90 text-sm md:text-base mb-4 bg-amber-950/40 p-3 rounded-lg border border-amber-900/30 font-kiwi">
+                    歴史の解説・年号がここに表示されます。
+                </div>
+
+                <!-- Word Display Area -->
+                <div class="text-center py-2 space-y-2">
+                    <!-- Kanji / Main Word -->
+                    <div id="wordKanji" class="text-3xl md:text-5xl font-black text-white tracking-wider font-kiwi min-h-[3.5rem] flex items-center justify-center">
+                        卑弥呼
+                    </div>
+                    <!-- Hiragana / Reading -->
+                    <div id="wordKana" class="text-lg md:text-xl text-amber-400 font-bold min-h-[1.75rem]">
+                        ひみこ
+                    </div>
+                    <!-- Typing Romaji Area -->
+                    <div id="wordRomaji" class="text-2xl md:text-4xl font-mono font-bold tracking-widest pt-2 min-h-[3rem]">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Virtual Keyboard -->
+            <div class="w-full max-w-3xl glass-card p-3 md:p-4 rounded-2xl shadow-lg">
+                <div id="keyboard" class="flex flex-col gap-1.5 max-w-2xl mx-auto">
+                    <!-- Rows generated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. RESULT SCREEN -->
+        <div id="resultScreen" class="hidden max-w-xl mx-auto w-full glass-card p-6 md:p-8 rounded-3xl shadow-2xl text-center space-y-6 border border-amber-500/30">
+            <div class="inline-block p-4 bg-amber-500/10 rounded-full mb-2 border border-amber-500/20">
+                <i class="fa-solid fa-trophy text-5xl text-amber-400"></i>
+            </div>
+            
+            <h2 class="text-2xl md:text-3xl font-black font-kiwi text-white">タイピング結果発表！</h2>
+
+            <!-- Score Cards -->
+            <div class="grid grid-cols-3 gap-3 my-4">
+                <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700">
+                    <span class="text-xs text-gray-400 block">スコア</span>
+                    <span id="finalScore" class="text-2xl font-black text-amber-400 font-mono">0</span>
+                </div>
+                <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700">
+                    <span class="text-xs text-gray-400 block">打鍵数</span>
+                    <span id="finalKeys" class="text-2xl font-black text-emerald-400 font-mono">0</span>
+                </div>
+                <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700">
+                    <span class="text-xs text-gray-400 block">正確率</span>
+                    <span id="finalAccuracy" class="text-2xl font-black text-blue-400 font-mono">100%</span>
+                </div>
+            </div>
+
+            <!-- Grade / Message -->
+            <div id="resultRank" class="p-4 bg-amber-950/40 rounded-xl border border-amber-800/40">
+                <p id="rankTitle" class="text-lg font-bold text-amber-300 font-kiwi">歴史マスター級！</p>
+                <p id="rankDesc" class="text-xs text-gray-300 mt-1">素晴らしい集中力！日本の歴史がしっかり頭に入っています！</p>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex gap-4 justify-center pt-2">
+                <button onclick="retryCurrentMode()" class="flex-1 py-3 px-6 bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> もう一度挑戦
+                </button>
+                <button onclick="showScreen('startScreen')" class="flex-1 py-3 px-6 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-list"></i> 時代を選ぶ
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-2 text-xs text-gray-500 border-t border-gray-800/40 mt-4">
+        &copy; 日本史暗記タイピング！ - 小学生・中学生の歴史学習＆タイピング上達アプリ
+        <ul class="footer-links">
+      <li><a href="https://soufeedworks.com/">Soufeedworksホームページへ行く</a></li>
+    </ul>
+    </footer>
+
+    <!-- GAME LOGIC SCRIPT -->
+    <script>
+        // --- JAPANESE HISTORY DATASET (6 MODES) ---
+        const historyData = [
+            // Mode 0: 縄文〜古墳時代
+            [
+                { kanji: "縄文時代", kana: "じょうもんじだい", desc: "【紀元前14000年頃〜】土器を使い、狩りや採集をして暮らしていた時代。" },
+                { kanji: "弥生時代", kana: "やよいじだい", desc: "【紀元前10世紀頃〜】米作り（稲作）や金属器の使用が始まった時代。" },
+                { kanji: "縄文土器", kana: "じょうもんどき", desc: "今から約1万6000年前〜約2400年前（縄文時代）に作られた、日本最古の焼き物（土器）。" },
+                { kanji: "弥生土器", kana: "やよいどき", desc: "今から約2400年前〜約1700年前（弥生時代）に使われた、薄くて硬い、実用的な焼き物（土器）。" },
+                { kanji: "卑弥呼", kana: "ひみこ", desc: "【3世紀】邪馬台国を治めた女王。中国の「魏」にお使いを送った。" },
+                { kanji: "大仙陵古墳", kana: "だいせんりょうこふん", desc: "【5世紀】仁徳天皇の墓とされる前方後円墳。世界最大級の大きさを誇る。" },
+                { kanji: "土偶", kana: "どぐう", desc: "縄文時代につくられた人形の土製品。豊かな実りや魔除けを祈った。" },
+                { kanji: "大和朝廷", kana: "やまとちょうてい", desc: "3世紀末〜7世紀ごろに奈良盆地を中心として生まれた、古代日本の中心的な政治勢力のこと。" },
+                 { kanji: "大王", kana: "おおきみ", desc: "古代に日本をまとめたヤマト政権の王（天皇や皇族）の呼び名のこと。" },
+                 { kanji: "竪穴住居", kana: "たてあなじゅうきょ", desc: "地面を掘り下げて柱を立て、かやぶき屋根をかけた大昔の家。" },
+                { kanji: "前方後円墳", kana: "ぜんぽうこうえんふん", desc: "古墳時代（3世紀後半〜7世紀頃）に作られた、鍵穴のような形をした日本独特の大きなお墓。" },
+                { kanji: "渡来人", kana: "とらいじん", desc: "大陸から日本へ渡り、大陸の高度な文化や技術を伝えた人々。" }
+            ],
+            // Mode 1: 飛鳥〜鎌倉時代
+            [
+                { kanji: "聖徳太子", kana: "しょうとくたいし", desc: "【574〜622】十七条の憲法を定め、冠位十二階をつくった政治家。" },
+                { kanji: "大化の改新", kana: "たいかのかいしん", desc: "【645年】中大兄皇子と中臣鎌足らが蘇我氏を倒し始めた政治の改革。" },
+                { kanji: "東大寺の仏像", kana: "とうだいじのぶつぞう", desc: "【752年】聖武天皇の命により、病気や災害をなくす祈りを込めて作られた大仏。" },
+                { kanji: "平安京", kana: "へいあんきょう", desc: "【794年】桓武天皇が京都に開いた都。「鳴くよウグイス平安京」。" },
+                { kanji: "源頼朝", kana: "みなもとのよりとも", desc: "【1192年】鎌倉幕府を開き、日本初の本格的な武家政権を創設した。" },
+                { kanji: "御恩と奉公", kana: "ごおんとほうこう", desc: "将軍（土地を保証する御恩）と御家人（命がけで戦う奉公）の絆。" },
+                { kanji: "元寇", kana: "げんこう", desc: "【1274・1281年】モンゴル帝国（元）が2度にわたり日本へ押し寄せた事件。" }
+            ],
+            // Mode 2: 室町〜安土桃山時代
+            [
+                { kanji: "足利義満", kana: "あしかがよしみつ", desc: "【1358〜1408】室町幕府3代将軍。金閣（鹿苑寺）を建て、日明貿易を行った。" },
+                { kanji: "応仁の乱", kana: "おうにんのらん", desc: "【1467年】京都で起こり、戦国時代のきっかけとなった10年以上続いた内乱。" },
+                { kanji: "鉄砲伝来", kana: "てっぽうでんらい", desc: "【1543年】種子島に漂着したポルトガル人によって日本に火縄銃が伝わる。" },
+                { kanji: "織田信長", kana: "おだのぶなが", desc: "楽市楽座や鉄砲隊の活用で天下統一を目指したが本能寺で倒れた。" },
+                { kanji: "キリスト教が伝わる", kana: "きりすときょうがつたわる", desc: "【1549年】スペインの宣教師フランシスコ・ザビエルが日本にキリスト教を伝えた。" },
+                { kanji: "本能寺の変", kana: "ほんのうじのへん", desc: "【1582年】明智光秀が謀反を起こし、織田信長を本能寺で討った事件。" },
+                { kanji: "豊臣秀吉", kana: "とよとみひでよし", desc: "【1590年】太閤検地や刀狩を行い、信長のあとに全国統一を果たした。" }
+            ],
+            // Mode 3: 江戸時代
+            [
+                { kanji: "関ヶ原の戦い", kana: "せきがはらのたたかい", desc: "【1600年】徳川家康が率いる東軍が勝利し、天下分け目となった戦い。" },
+                { kanji: "徳川家康", kana: "とくがわいえやす", desc: "【1603年】江戸幕府を開き、約260年続く泰平の世の基礎を築いた。" },
+                { kanji: "参勤交代", kana: "さんきんこうたい", desc: "【1635年】大名に1年おきに江戸と領地を行き来させた制度。" },
+                { kanji: "島原天草一揆", kana: "しまばらあまくさいっき", desc: "1637年に現在の長崎県（島原）と熊本県（天草）で起きた、日本の歴史上、最大規模の一揆（内乱）" },
+                { kanji: "鎖国", kana: "さこく", desc: "幕府がキリスト教の制限と貿易独占のため海外との交流を制限した政策。" },
+                { kanji: "ペリー来航", kana: "ぺりーらいこう", desc: "【1853年】黒船を率いて浦賀に現れ、日本に開国を迫ったアメリカの提督。" },
+                { kanji: "大政奉還", kana: "たいせいほうかん", desc: "【1867年】徳川慶喜が政権を明治天皇に返し、江戸幕府が終わりを迎えた。" }
+            ],
+            // Mode 4: 明治〜戦前
+            [
+                { kanji: "明治維新", kana: "めいじいしん", desc: "【1868年〜】近代国家を目指して行われた政治・社会・文化の大改革。" },
+                { kanji: "文明開化", kana: "ぶんめいかいか", desc: "洋服、ガス灯、鉄道など、西洋の文化が急激に取り入れられた現象。" },
+                { kanji: "大日本帝国憲法", kana: "だいにっぽんていこくけんぽう", desc: "【1889年】伊藤博文らが中心となり制定したアジア初の近代憲法。" },
+                { kanji: "日露戦争", kana: "にちろせんそう", desc: "【1904年】ロシアとの間で起こった戦争。翌年ポーターズで講和条約を結ぶ。" },
+                { kanji: "大正デモクラシー", kana: "たいしょうでもくらしー", desc: "大正時代に広まった、民主主義を求める政治や社会の動き。" },
+                { kanji: "普通選挙法", kana: "ふつうせんきょほう", desc: "【1925年】25歳以上のすべての男子に選挙権を与えた法律。" }
+            ],
+            // Mode 5: 戦後〜現代
+            [
+                { kanji: "日本国憲法", kana: "にほんこくけんぽう", desc: "【1946年公布】国民主権、基本的人権の尊重、平和主義の三原則。" },
+                { kanji: "サンフランシスコ平和条約", kana: "さんふらんしすこへいわじょうやく", desc: "【1951年】日本が主権を回復し、国際社会に復帰した条約。" },
+                { kanji: "高度経済成長", kana: "こうどけいざいせいちょう", desc: "1950年代半ばから1970年代にかけて日本経済が急激に成長した時期。" },
+                { kanji: "三種の神器", kana: "さんしゅのじんぎ", desc: "戦後の高度経済成長期、家事の負担を劇的に減らし、人々の憧れとなった3つの白物家電です。" },
+                { kanji: "東京オリンピック", kana: "とうきょうおりんぴっく", desc: "【1964年】アジアで初めて開催された夏季オリンピック競技大会。" },
+                { kanji: "新幹線", kana: "しんかんせん", desc: "【1964年】東海道新幹線が開通。日本の技術力を世界に示した。" },
+                { kanji: "大阪万博", kana: "おおさかばんぱく", desc: "【1970年】大阪府吹田市の千里丘陵で開催された日本およびアジア初の万国博覧会。" }
+
+            ]
+        ];
+
+        // --- ROMAJI CONVERSION TABLE & FLEXIBLE MATCHING ---
+        // Kana to possible Romaji representation map
+        const romajiMap = {
+            'あ': ['a'], 'い': ['i'], 'う': ['u'], 'え': ['e'], 'お': ['o'],
+            'か': ['ka'], 'き': ['ki'], 'く': ['ku'], 'け': ['ke'], 'こ': ['ko'],
+            'さ': ['sa'], 'し': ['shi', 'si'], 'す': ['su'], 'せ': ['se'], 'そ': ['so'],
+            'た': ['ta'], 'ち': ['chi', 'ti'], 'つ': ['tsu', 'tu'], 'て': ['te'], 'と': ['to'],
+            'な': ['na'], 'に': ['ni'], 'ぬ': ['nu'], 'ね': ['ne'], 'の': ['no'],
+            'は': ['ha'], 'ひ': ['hi'], 'ふ': ['fu', 'hu'], 'へ': ['he'], 'ほ': ['ho'],
+            'ま': ['ma'], 'み': ['mi'], 'む': ['mu'], 'め': ['me'], 'も': ['mo'],
+            'や': ['ya'], 'ゆ': ['yu'], 'よ': ['yo'],
+            'ら': ['ra'], 'り': ['ri'], 'る': ['ru'], 'れ': ['re'], 'ろ': ['ro'],
+            'わ': ['wa'], 'を': ['wo'], 'ん': ['nn', 'n'],
+            'が': ['ga'], 'ぎ': ['gi'], 'ぐ': ['gu'], 'げ': ['ge'], 'ご': ['go'],
+            'ざ': ['za'], 'じ': ['ji', 'zi'], 'ず': ['zu'], 'ぜ': ['ze'], 'ぞ': ['zo'],
+            'だ': ['da'], 'ぢ': ['di'], 'づ': ['du'], 'で': ['de'], 'ど': ['do'],
+            'ば': ['ba'], 'び': ['bi'], 'ぶ': ['bu'], 'べ': ['be'], 'ぼ': ['bo'],
+            'ぱ': ['pa'], 'ぴ': ['pi'], 'ぷ': ['pu'], 'ぺ': ['pe'], 'ぽ': ['po'],
+            'きゃ': ['kya'], 'きゅ': ['kyu'], 'きょ': ['kyo'],
+            'しゃ': ['sha', 'sya'], 'しゅ': ['shu', 'syu'], 'しょ': ['sho', 'syo'],
+            'ちゃ': ['cha', 'tya'], 'ちゅ': ['chu', 'tyu'], 'ちょ': ['cho', 'tyo'],
+            'にゃ': ['nya'], 'にゅ': ['nyu'], 'にょ': ['nyo'],
+            'ひゃ': ['hya'], 'ひゅ': ['hyu'], 'ひょ': ['hyo'],
+            'みゃ': ['mya'], 'みゅ': ['myu'], 'みょ': ['myo'],
+            'りゃ': ['rya'], 'りゅ': ['ryu'], 'りょ': ['ryo'],
+            'ぎゃ': ['gya'], 'ぎゅ': ['gyu'], 'ぎょ': ['gyo'],
+            'じゃ': ['ja', 'zya'], 'じゅ': ['ju', 'zyu'], 'じょ': ['jo', 'zyo'],
+            'びゃ': ['bya'], 'びゅ': ['byu'], 'びょ': ['byo'],
+            'ぴゃ': ['pya'], 'ぴゅ': ['pyu'], 'ぴょ': ['pyo'],
+            'ー': ['-']
+        };
+
+        // KEYBOARD LAYOUT
+        const keyboardRows = [
+            ['1','2','3','4','5','6','7','8','9','0','-'],
+            ['q','w','e','r','t','y','u','i','o','p'],
+            ['a','s','d','f','g','h','j','k','l'],
+            ['z','x','c','v','b','n','m']
+        ];
+
+        // --- STATE VARIABLES ---
+        let currentMode = 0;
+        let currentQuestionIndex = 0;
+        let questions = [];
+        let timerInterval = null;
+        let timeLeft = 60;
+        let totalTypedKeys = 0;
+        let missCount = 0;
+        let score = 0;
+        let dynamicAccuracy = 0; // 動的に増減する正答率（0%スタート）
+
+        // Current typing sentence state
+        let targetKana = "";
+        let targetRomaji = "";
+        let typedRomaji = "";
+        let currentInputBuffer = "";
+
+        // UI Elements
+        const screens = {
+            startScreen: document.getElementById('startScreen'),
+            gameScreen: document.getElementById('gameScreen'),
+            resultScreen: document.getElementById('resultScreen')
+        };
+
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            renderKeyboard();
+            window.addEventListener('keydown', handleKeyPress);
+        };
+
+        function showScreen(screenName) {
+            Object.keys(screens).forEach(key => {
+                if(key === screenName) screens[key].classList.remove('hidden');
+                else screens[key].classList.add('hidden');
+            });
+
+            const statsHeader = document.getElementById('statsHeader');
+            if(screenName === 'gameScreen') {
+                statsHeader.classList.remove('hidden');
+            } else if(screenName === 'startScreen') {
+                statsHeader.classList.add('hidden');
+                clearInterval(timerInterval);
+            }
+        }
+
+        function renderKeyboard() {
+            const kbContainer = document.getElementById('keyboard');
+            kbContainer.innerHTML = '';
+
+            keyboardRows.forEach((row, rowIndex) => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'flex justify-center gap-1 my-0.5';
+
+                row.forEach(key => {
+                    const keyBtn = document.createElement('div');
+                    keyBtn.id = `key-${key}`;
+                    keyBtn.className = 'key bg-gray-700/80 text-gray-200 font-mono font-bold rounded text-xs sm:text-sm md:text-base h-10 md:h-12 flex items-center justify-center border border-gray-600 uppercase flex-1 max-w-[48px] select-none';
+                    keyBtn.innerText = key;
+                    rowDiv.appendChild(keyBtn);
+                });
+
+                kbContainer.appendChild(rowDiv);
+            });
+        }
+
+        // --- GAME FLOW ---
+        function selectMode(modeIndex) {
+            currentMode = modeIndex;
+            questions = [...historyData[modeIndex]];
+            // Shuffle questions
+            questions.sort(() => Math.random() - 0.5);
+
+            currentQuestionIndex = 0;
+            score = 0;
+            totalTypedKeys = 0;
+            missCount = 0;
+            timeLeft = 60;
+            dynamicAccuracy = 0; // 0%からスタート
+
+            updateStats();
+            showScreen('gameScreen');
+            startTimer();
+            loadQuestion();
+        }
+
+        function retryCurrentMode() {
+            selectMode(currentMode);
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            const timerEl = document.getElementById('timer');
+            timerEl.innerText = `${timeLeft}s`;
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = `${timeLeft}s`;
+
+                if(timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function updateStats() {
+            document.getElementById('score').innerText = score;
+            // 0%〜100%の間に収める
+            const displayAccuracy = Math.min(100, Math.max(0, Math.round(dynamicAccuracy)));
+            document.getElementById('accuracy').innerText = `${displayAccuracy}%`;
+        }
+
+        // Convert Kana string to default canonical Romaji string
+        function kanaToDefaultRomaji(kanaStr) {
+            let res = "";
+            let i = 0;
+            while(i < kanaStr.length) {
+                // Check 2-character compounds (e.g. きゃ)
+                if(i + 1 < kanaStr.length) {
+                    const pair = kanaStr.substring(i, i+2);
+                    if(romajiMap[pair]) {
+                        res += romajiMap[pair][0];
+                        i += 2;
+                        continue;
+                    }
+                }
+                // Check sokuon (っ)
+                if(kanaStr[i] === 'っ') {
+                    if(i + 1 < kanaStr.length) {
+                        const nextChar = kanaStr[i+1];
+                        let nextRomaji = "";
+                        if(i + 2 < kanaStr.length && romajiMap[kanaStr.substring(i+1, i+3)]) {
+                            nextRomaji = romajiMap[kanaStr.substring(i+1, i+3)][0];
+                        } else if(romajiMap[nextChar]) {
+                            nextRomaji = romajiMap[nextChar][0];
+                        }
+                        if(nextRomaji) {
+                            res += nextRomaji[0]; // double consonant
+                            i++;
+                            continue;
+                        }
+                    }
+                }
+                // Single char
+                const single = kanaStr[i];
+                if(romajiMap[single]) {
+                    res += romajiMap[single][0];
+                } else {
+                    res += single;
+                }
+                i++;
+            }
+            return res;
+        }
+
+        function loadQuestion() {
+            if(currentQuestionIndex >= questions.length) {
+                // Reshuffle if reached end of list
+                questions.sort(() => Math.random() - 0.5);
+                currentQuestionIndex = 0;
+            }
+
+            const q = questions[currentQuestionIndex];
+            document.getElementById('wordKanji').innerText = q.kanji;
+            document.getElementById('wordKana').innerText = q.kana;
+            document.getElementById('wordDesc').innerText = q.desc;
+            document.getElementById('questionCount').innerText = `第 ${currentQuestionIndex + 1} 問`;
+
+            const eraNames = ["縄文〜古墳", "飛鳥〜鎌倉", "室町〜安土桃山", "江戸時代", "明治〜戦前", "戦後〜現代"];
+            document.getElementById('currentEraBadge').innerText = eraNames[currentMode];
+
+            targetKana = q.kana;
+            targetRomaji = kanaToDefaultRomaji(targetKana);
+            typedRomaji = "";
+            currentInputBuffer = "";
+
+            renderRomajiDisplay();
+            highlightNextKey();
+        }
+
+        function renderRomajiDisplay() {
+            const romajiContainer = document.getElementById('wordRomaji');
+            let html = "";
+
+            const typedPart = `<span class="char-typed">${typedRomaji}</span>`;
+            
+            let currentKey = "";
+            let remainingPart = "";
+
+            if(typedRomaji.length < targetRomaji.length) {
+                currentKey = `<span class="char-current">${targetRomaji[typedRomaji.length]}</span>`;
+                remainingPart = `<span class="char-untyped">${targetRomaji.substring(typedRomaji.length + 1)}</span>`;
+            }
+
+            romajiContainer.innerHTML = typedPart + currentKey + remainingPart;
+        }
+
+        function highlightNextKey() {
+            // Remove previous highlights
+            document.querySelectorAll('.key').forEach(k => k.classList.remove('next-key'));
+
+            if(typedRomaji.length < targetRomaji.length) {
+                const nextChar = targetRomaji[typedRomaji.length].toLowerCase();
+                const keyEl = document.getElementById(`key-${nextChar}`);
+                if(keyEl) keyEl.classList.add('next-key');
+            }
+        }
+
+        // --- KEYBOARD INPUT HANDLING & FLEXIBLE ROMAJI ENGINE ---
+        function handleKeyPress(e) {
+            if(screens.gameScreen.classList.contains('hidden')) return;
+
+            const key = e.key.toLowerCase();
+
+            // Ignore non-character keys
+            if(key.length !== 1 || key < 'a' || key > 'z') {
+                if(key !== '-' && !(key >= '0' && key <= '9')) return;
+            }
+
+            totalTypedKeys++;
+
+            // Visual feedback on virtual keyboard
+            const keyEl = document.getElementById(`key-${key}`);
+            if(keyEl) {
+                keyEl.classList.add('active');
+                setTimeout(() => keyEl.classList.remove('active'), 120);
+            }
+
+            const expectedChar = targetRomaji[typedRomaji.length];
+
+            if(key === expectedChar) {
+                // Correct Key!
+                typedRomaji += key;
+                score += 10;
+                
+                // 正解で正答率アップ (+2%)
+                dynamicAccuracy = Math.min(100, dynamicAccuracy + 2);
+
+                renderRomajiDisplay();
+                highlightNextKey();
+
+                // Check Word Complete
+                if(typedRomaji.length >= targetRomaji.length) {
+                    score += 50; // Bonus for completing word
+                    // 単語達成でボーナスアップ (+5%)
+                    dynamicAccuracy = Math.min(100, dynamicAccuracy + 5);
+                    currentQuestionIndex++;
+                    setTimeout(loadQuestion, 150);
+                }
+            } else {
+                // Check if alternative valid conversion branch (e.g., user typed 'si' instead of 'shi')
+                let adjusted = tryFlexibleRomaji(typedRomaji + key, targetKana);
+                if(adjusted) {
+                    targetRomaji = adjusted;
+                    typedRomaji += key;
+                    score += 10;
+                    
+                    // 正解で正答率アップ (+2%)
+                    dynamicAccuracy = Math.min(100, dynamicAccuracy + 2);
+
+                    renderRomajiDisplay();
+                    highlightNextKey();
+
+                    if(typedRomaji.length >= targetRomaji.length) {
+                        score += 50;
+                        dynamicAccuracy = Math.min(100, dynamicAccuracy + 5);
+                        currentQuestionIndex++;
+                        setTimeout(loadQuestion, 150);
+                    }
+                } else {
+                    // Miss Typing
+                    missCount++;
+                    score = Math.max(0, score - 5);
+                    
+                    // ミスタイプで正答率ダウン (-3%)
+                    dynamicAccuracy = Math.max(0, dynamicAccuracy - 3);
+                }
+            }
+
+            updateStats();
+        }
+
+        // Flexible Romaji Adjuster
+        function tryFlexibleRomaji(currentTyped, fullKana) {
+            // Common replacements for flex input
+            const flexRules = [
+                { from: 'shi', to: 'si' }, { from: 'si', to: 'shi' },
+                { from: 'chi', to: 'ti' }, { from: 'ti', to: 'chi' },
+                { from: 'tsu', to: 'tu' }, { from: 'tu', to: 'tsu' },
+                { from: 'fu', to: 'hu' },  { from: 'hu', to: 'fu' },
+                { from: 'ji', to: 'zi' },  { from: 'zi', to: 'ji' },
+                { from: 'sha', to: 'sya' }, { from: 'sya', to: 'sha' },
+                { from: 'shu', to: 'syu' }, { from: 'syu', to: 'shu' },
+                { from: 'sho', to: 'syo' }, { from: 'syo', to: 'sho' },
+                { from: 'cha', to: 'tya' }, { from: 'tya', to: 'cha' },
+                { from: 'chu', to: 'tyu' }, { from: 'tyu', to: 'chu' },
+                { from: 'cho', to: 'tyo' }, { from: 'tyo', to: 'cho' },
+                { from: 'nn', to: 'n' }
+            ];
+
+            for(let rule of flexRules) {
+                let candidate = targetRomaji.replace(rule.from, rule.to);
+                if(candidate.startsWith(currentTyped)) {
+                    return candidate;
+                }
+            }
+            return null;
+        }
+
+        // --- END GAME & RESULTS ---
+        function endGame() {
+            showScreen('resultScreen');
+
+            document.getElementById('finalScore').innerText = score;
+            document.getElementById('finalKeys').innerText = totalTypedKeys;
+            
+            const finalAcc = Math.min(100, Math.max(0, Math.round(dynamicAccuracy)));
+            document.getElementById('finalAccuracy').innerText = `${finalAcc}%`;
+
+            // Calculate Rank
+            const rankTitle = document.getElementById('rankTitle');
+            const rankDesc = document.getElementById('rankDesc');
+
+            if(score >= 800) {
+                rankTitle.innerText = "⚔️ 歴史大将軍 (S級)";
+                rankDesc.innerText = "素晴らしい！タイピング速度も歴史の暗記も完璧レベルです！";
+            } else if(score >= 500) {
+                rankTitle.innerText = "🏯 歴史大名 (A級)";
+                rankDesc.innerText = "かなり歴史に詳しいですね！次の時代にも挑戦してみよう！";
+            } else if(score >= 250) {
+                rankTitle.innerText = "📜 歴史修行中 (B級)";
+                rankDesc.innerText = "ナイスチャレンジ！くり返し練習して完璧に暗記しよう！";
+            } else {
+                rankTitle.innerText = "🌾 歴史見習い (C級)";
+                rankDesc.innerText = "まずは用語とタイピングに慣れることからスタートしよう！";
+            }
+        }
+    </script>
+</body>
+</html>
